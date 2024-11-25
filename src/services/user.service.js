@@ -10,14 +10,22 @@ const createUser = async () => {
 };
 
 const getUsers = async (data) => {
-  const { limit, page } = data;
+  const { limit, page, name } = data;
+
+  const queryParams = {
+    deleted_at: null,
+  };
+
+  if (name) {
+    queryParams.fullname = { $regex: name, $options: 'i' };
+  }
   
   const users = await Users.find(
-    {
-      deleted_at: null,
-    },
+    queryParams,
     { password: 0, __v: 0 }
-  ).limit(limit).skip(limit * (page - 1));
+  ).limit(limit)
+  .skip(limit * (page - 1))
+  .sort({ created_at: -1 });
 
   return successResponse('Get users success', users);
 };

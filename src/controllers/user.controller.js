@@ -2,11 +2,8 @@ const userService = require('../services/user.service');
 
 const getUsers = async (req, res) => {
     try {
-        const data = {
-            limit: req.query.limit || 10,
-            page: req.query.page || 1
-        }
-
+        const data = req.query;
+        
         const users = await userService.getUsers(data);
         res.send(users);
     } catch (error) {
