@@ -1,9 +1,14 @@
 const userRoutes = require('./user.route');
+const authRoutes = require('./auth.route');
 
 const defaultRoutes = [
   {
     path: '/users',
     route: userRoutes,
+  },
+  {
+    path: '/auth',
+    route: authRoutes,
   }
 ]
 
