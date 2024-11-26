@@ -1,49 +1,34 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
-const MessageSchema = new mongoose.Schema({
-	roomId: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: 'Room',
-		required: true,
-	},
+const MessageSchema = new mongoose.Schema(
+  {
+	content: { type: String },
 	sender: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: 'User',
-		required: true,
+	  type: mongoose.Schema.Types.ObjectId,
+	  ref: 'User',
+	  required: true,
 	},
-	content: {
-		type: String,
-		required: function () {
-			return (
-				!this.attach_files ||
-				(this.attach_files && this.attach_files.length === 0)
-			)
-		},
+	recipient: {
+	  type: mongoose.Schema.Types.ObjectId,
+	  ref: 'User',
 	},
-	reply_to: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: 'Message',
-		default: null,
+	room: {
+	  type: mongoose.Schema.Types.ObjectId,
+	  ref: 'Room',
 	},
-	seen_by: [
-		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: 'User',
-		},
-	],
-	type: { type: String, default: 'message' }, // text, image, video, file
-	attach_files: [
-		{
-			type: String
-		},
-	],
-	created_at: {
-		type: Date,
-		default: Date.now,
+	attachment: {
+	  fileUrl: { type: String },
+	  fileType: { type: String }, // image, video, file
 	},
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now },
 	deleted_at: { type: Date, default: null },
-})
+  },
+  {
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+  }
+);
 
+const Message = mongoose.model("Message", MessageSchema);
 
-const Message = mongoose.model('messages', MessageSchema)
-module.exports = Message
+module.exports = Message;

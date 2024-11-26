@@ -49,7 +49,7 @@ const registerUser = async (data) => {
   // remove password
   user.password = undefined;
 
-  return user;
+  return successResponse('Register user success', user);
 }
 
 const getUserInfo = async (data) => {

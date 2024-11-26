@@ -1,15 +1,20 @@
 const userRoutes = require('./user.route');
 const authRoutes = require('./auth.route');
+const roomRoutes = require('./room.route');
 
 const defaultRoutes = [
+  {
+    path: '/auth',
+    route: authRoutes,
+  },
   {
     path: '/users',
     route: userRoutes,
   },
   {
-    path: '/auth',
-    route: authRoutes,
-  }
+    path: '/rooms',
+    route: roomRoutes,
+  },
 ]
 
 function registerRoutes(fastify) {
