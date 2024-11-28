@@ -7,8 +7,8 @@ const userSocketMap = new Map();
 const configureSocket = (server) => {
   io = new Server(server, {
     cors: {
-      origin: ["http://localhost:3000", "https://example.com"], // Các domain được phép kết nối
-      methods: ["GET", "POST"], // Các phương thức HTTP được phép
+      origin: ["http://localhost:3000", process.env.HOME_URL],
+      methods: ["GET", "POST"],
     },
   });
 
@@ -28,6 +28,9 @@ const configureSocket = (server) => {
       console.table(userSocketMap);
     });
 
+    socket.on("test", () => {
+      console.log("Test event received");
+    });
     // Xử lý tin nhắn cá nhân
     socket.on("private_message", ({ recipientId, message }) => {
       if (!recipientId || !message) {
