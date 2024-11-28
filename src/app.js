@@ -6,7 +6,7 @@ const chalk = require("chalk");
 
 fastify.register(cors, {
   origin: ["http://localhost:3005", process.env.HOME_URL || "https://telme-api.onrender.com"], // Các domain được phép truy cập
-  methods: ["GET", "POST", "PUT", "DELETE"], // Các method HTTP được phép
+  // methods: ["GET", "POST", "PUT", "DELETE"], // Các method HTTP được phép
   allowedHeaders: ["Content-Type", "Authorization"], // Các header được phép
   credentials: true, // Hỗ trợ gửi cookie (cross-site)
 });
