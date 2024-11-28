@@ -12,8 +12,9 @@ const startServer = async () => {
 
     configureSocket(server); // Gắn Socket.IO vào HTTP server
 
-    await app.listen({ port: 3002, host: "0.0.0.0" });
-    console.log(chalk.blue("Server running at http://localhost:3002"));
+    const port = process.env.PORT;
+    app.listen({ port, host: "0.0.0.0" });
+    console.log(chalk.blue("Server running at port ", port));
   } catch (error) {
     console.error(error);
     process.exit(1);
