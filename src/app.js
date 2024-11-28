@@ -2,7 +2,7 @@ const fastify = require("fastify")({ logger: true });
 const registerRoutes = require("./routes/router");
 const cors = require("@fastify/cors");
 
-const homeUrl = process.env.HOME_URL || "http://localhost:3005";
+const homeUrl = process.env.HOME_URL || "https://telme-api.onrender.com";
 
 fastify.register(cors, {
   origin: ["http://localhost:3005", homeUrl], // Các domain được phép truy cập
