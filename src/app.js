@@ -7,11 +7,11 @@ const chalk = require("chalk");
 fastify.register(cors, {
   origin: (origin, callback) => {
     console.log(`Request origin: ${origin}`);
-    const allowedOrigin = process.env.HOME_URL
-    if (!origin || origin === allowedOrigin) {
+    const allowedOrigins = [process.env.HOME_URL];
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.error(`Origin not allowed: ${origin}`);
+      console.error(chalk.red(`Origin not allowed: ${origin}`));
       callback(new Error("Not allowed by CORS"));
     }
   },
