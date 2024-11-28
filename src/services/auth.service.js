@@ -1,7 +1,8 @@
 const Users = require('../models/user.model');
 const { successResponse } = require('../utils/response');
-const { generateToken } = require('../utils/token');
+const { generateToken, verifyToken } = require('../utils/token');
 const bcrypt = require('bcrypt');
+const { TOKEN_TYPE } = require('../constants/token');
 
 const login = async (data) => {
     const { email, password } = data;
@@ -20,8 +21,8 @@ const login = async (data) => {
         throw new Error('Password is incorrect');
     }
 
-    const accessToken = generateToken(user._id, 'access');
-    const refreshToken = generateToken(user._id, 'refresh');
+    const accessToken = generateToken(user._id, TOKEN_TYPE.ACCESS);
+    const refreshToken = generateToken(user._id, TOKEN_TYPE.REFRESH);
 
     user.password = undefined;
 
@@ -35,6 +36,22 @@ const login = async (data) => {
     );
 }
 
+const renewToken = async (data) => {
+    const { refreshToken } = data;
+    const decoded = verifyToken(refreshToken, TOKEN_TYPE.REFRESH);
+
+    const accessToken = generateToken(decoded.userId, TOKEN_TYPE.ACCESS);
+    const newRefreshToken = generateToken(decoded.userId, TOKEN_TYPE.REFRESH);
+
+    return successResponse('Renew token success', {
+        tokens: {
+            accessToken,
+            newRefreshToken,
+        }
+    });
+}
+
 module.exports = {
-    login
+    login,
+    renewToken
 }

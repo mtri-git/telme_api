@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { TOKEN_TYPE } = require("../constants/token");
 
 /*
  *    Generate token
@@ -11,8 +12,8 @@ const generateToken = (userId, type) => {
         id: userId,
     };
 
-    const secret = type === "access" ? process.env.ACCESS_TOKEN_SECRET : process.env.REFRESH_TOKEN_SECRET;
-    const expiresIn = type === "access" ? process.env.ACCESS_TOKEN_EXPIRES_IN : process.env.REFRESH_TOKEN_EXPIRES_IN;
+    const secret = type === TOKEN_TYPE.ACCESS ? process.env.ACCESS_TOKEN_SECRET : process.env.REFRESH_TOKEN_SECRET;
+    const expiresIn = type === TOKEN_TYPE.ACCESS ? process.env.ACCESS_TOKEN_EXPIRES_IN : process.env.REFRESH_TOKEN_EXPIRES_IN;
     
     return jwt.sign(payload, secret, {
         expiresIn
@@ -20,7 +21,7 @@ const generateToken = (userId, type) => {
 };
 
 const verifyToken = (token, type) => {
-    const secret = type === "access" ? process.env.ACCESS_TOKEN_SECRET : process.env.REFRESH_TOKEN_SECRET;
+    const secret = type === TOKEN_TYPE.ACCESS ? process.env.ACCESS_TOKEN_SECRET : process.env.REFRESH_TOKEN_SECRET;
     return jwt.verify(token, secret);
 };
 

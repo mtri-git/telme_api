@@ -1,3 +1,4 @@
+const { TOKEN_TYPE } = require("../constants/token");
 const { verifyToken } = require("../utils/token");
 
 const isAuth = async (request, reply) => {
@@ -14,7 +15,7 @@ const isAuth = async (request, reply) => {
     }
 
     // Xác thực token
-    const decoded = verifyToken(token, 'access');
+    const decoded = verifyToken(token, TOKEN_TYPE.ACCESS);
     request.user = decoded; // Gắn thông tin user vào request để sử dụng trong các route
   } catch (error) {
     return reply.status(401).send({ message: 'Unauthorized' });
