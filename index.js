@@ -10,7 +10,7 @@ const startServer = async () => {
 
     const server = app.server;
 
-    configureSocket(server); // Gắn Socket.IO vào HTTP server
+    // configureSocket(server); // Gắn Socket.IO vào HTTP server
 
     const port = process.env.PORT;
     app.listen({ port, host: "0.0.0.0" });
