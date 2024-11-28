@@ -1,5 +1,5 @@
 const Users = require('../models/user.model');
-const { successResponse } = require('../utils/response');
+const { successResponse, errorResponse } = require('../utils/response');
 const { generateToken, verifyToken } = require('../utils/token');
 const bcrypt = require('bcrypt');
 const { TOKEN_TYPE } = require('../constants/token');
@@ -12,13 +12,13 @@ const login = async (data) => {
     });
 
     if (!user) {
-        throw new Error('User not found');
+        return errorResponse(400, 'Email is not registered');
     }
 
     const isMatch = bcrypt.compareSync(password, user.password);
 
     if (!isMatch) {
-        throw new Error('Password is incorrect');
+        return errorResponse(400, 'Password or email is incorrect');
     }
 
     const accessToken = generateToken(user._id, TOKEN_TYPE.ACCESS);

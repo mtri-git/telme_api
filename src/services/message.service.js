@@ -1,5 +1,5 @@
 const Message = require('../models/message.model');
-const Room = require('../models/room.model');
+const { successResponse } = require('../utils/response');
 
 /**
  * Tạo một tin nhắn mới
@@ -17,7 +17,8 @@ const createMessage = async (messageData) => {
  * @returns {Array} - Danh sách tin nhắn trong phòng
  */
 const getMessagesByRoom = async (roomId) => {
-  return await Message.find({ room: roomId }).populate('sender').populate('room');
+  const messages = await Message.find({ room: roomId }).populate('sender').populate('room');
+  return successResponse('Get messages success', messages);
 };
 
 /**
@@ -27,12 +28,14 @@ const getMessagesByRoom = async (roomId) => {
  * @returns {Array} - Danh sách tin nhắn cá nhân
  */
 const getPrivateMessages = async (senderId, recipientId) => {
-  return await Message.find({
+  const messages =  await Message.find({
     $or: [
       { sender: senderId, recipient: recipientId },
       { sender: recipientId, recipient: senderId },
     ],
   }).populate('sender').populate('recipient');
+
+  return successResponse('Get private messages success', messages);
 };
 
 /**
@@ -41,7 +44,8 @@ const getPrivateMessages = async (senderId, recipientId) => {
  * @returns {Object} - Tin nhắn đã xóa
  */
 const deleteMessage = async (messageId) => {
-  return await Message.findByIdAndDelete(messageId);
+  const message = await Message.findByIdAndDelete(messageId);
+  return successResponse('Delete message success', message);
 };
 
 module.exports = {
