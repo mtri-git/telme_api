@@ -95,7 +95,7 @@ const configureSocket = (server) => {
     });
 
     // Sự kiện typing
-    socket.on("room_typing", ({ roomId }) => {
+    socket.on("room_typing", ({ roomId, sender }) => {
       if (!roomId) {
         console.warn(`Invalid roomId`);
         return;
@@ -105,11 +105,12 @@ const configureSocket = (server) => {
       io.to(roomId).emit("user_room_typing", {
         senderId: socket.id,
         userId: userId,
+        sender
       });
       console.log(`Typing event sent in ${roomId} by ${userId}`);
     })
 
-    socket.on("stop_room_typing", ({ roomId }) => {
+    socket.on("stop_room_typing", ({ roomId, sender }) => {
       if (!roomId) {
         console.warn(`Invalid roomId`);
         return;
@@ -119,12 +120,13 @@ const configureSocket = (server) => {
       io.to(roomId).emit("user_stop_room_typing", {
         senderId: socket.id,
         userId: userId,
+        sender
       });
       console.log(`Stop typing event sent in ${roomId} by ${userId}`);
     })
 
     // Xử lý tin nhắn nhóm
-    socket.on("room_message", ({ roomId, message }) => {
+    socket.on("room_message", ({ roomId, message, sender }) => {
       if (!roomId || !message) {
         console.warn(`Invalid room message payload`);
         return;
@@ -144,6 +146,7 @@ const configureSocket = (server) => {
       io.to(roomId).emit("receive_room_message", {
         senderId: socket.id,
         userId: userId,
+        sender,
         message,
       });
       console.log(`Room message sent in ${roomId} by ${userId}`);
