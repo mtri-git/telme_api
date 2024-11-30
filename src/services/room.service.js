@@ -29,6 +29,15 @@ const getAllRooms = async (data) => {
   return successResponse("Get rooms success", rooms);
 };
 
+const getRoomForUser = async (data) => {
+  const { userId } = data;
+  const rooms = await Room.find({ users: userId })
+    .populate("users")
+    // .populate("created_by")
+    // .populate("admins");
+  return successResponse("Get rooms success", rooms);
+}
+
 /**
  * Lấy thông tin phòng theo ID
  * @param {String} roomId - ID phòng
@@ -80,6 +89,7 @@ const deleteRoom = async (roomId) => {
 module.exports = {
   createRoom,
   getAllRooms,
+  getRoomForUser,
   getRoomById,
   addUserToRoom,
   deleteRoom,

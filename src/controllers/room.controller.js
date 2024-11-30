@@ -30,6 +30,20 @@ const getAllRooms = async (req, reply) => {
 };
 
 /**
+ * Lấy danh sách phòng
+ */
+const getRoomForUser = async (req, reply) => {
+  try {
+    const data = req.query;
+    data.userId = req.user.id;
+    const rooms = await roomService.getRoomForUser(data);
+    reply.send(rooms);
+  } catch (error) {
+    reply.code(500).send({ error: error.message });
+  }
+};
+
+/**
  * Lấy thông tin phòng theo ID
  */
 const getRoomById = async (req, reply) => {
@@ -80,6 +94,7 @@ const deleteRoom = async (req, reply) => {
 module.exports = {
   createRoom,
   getAllRooms,
+  getRoomForUser,
   getRoomById,
   addUserToRoom,
   deleteRoom,
