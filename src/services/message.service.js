@@ -1,5 +1,5 @@
-const Message = require('../models/message.model');
-const { successResponse } = require('../utils/response');
+const Message = require("../models/message.model");
+const { successResponse } = require("../utils/response");
 
 /**
  * Tạo một tin nhắn mới
@@ -7,8 +7,10 @@ const { successResponse } = require('../utils/response');
  * @returns {Object} - Tin nhắn đã được tạo
  */
 const createMessage = async (messageData) => {
+  console.log("New message:", messageData);
   const message = new Message(messageData);
-  return await message.save();
+  await message.save();
+  return successResponse("Create message success", message);
 };
 
 /**
@@ -16,9 +18,22 @@ const createMessage = async (messageData) => {
  * @param {String} roomId - ID của phòng
  * @returns {Array} - Danh sách tin nhắn trong phòng
  */
-const getMessagesByRoom = async (roomId) => {
-  const messages = await Message.find({ room: roomId }).populate('sender').populate('room');
-  return successResponse('Get messages success', messages);
+const getMessagesByRoom = async (data) => {
+  const { roomId, limit, page, userId } = data;
+  console.log("🚀 ~ getMessagesByRoom ~ userId:", userId)
+  const total = await Message.countDocuments({ room: roomId });
+  const messages = await Message.find({ room: roomId, deleted_at: null })
+    .populate("sender")
+    .limit(limit)
+    .skip(limit * (page - 1))
+    .sort({ created_at: -1 })
+    .lean();
+
+  for (const message of messages) {
+    message.is_sender = message.sender._id.toString() === userId;
+  }
+
+  return successResponse("Get messages success", messages, { meta_data: { total, limit, page } });
 };
 
 /**
@@ -28,14 +43,16 @@ const getMessagesByRoom = async (roomId) => {
  * @returns {Array} - Danh sách tin nhắn cá nhân
  */
 const getPrivateMessages = async (senderId, recipientId) => {
-  const messages =  await Message.find({
+  const messages = await Message.find({
     $or: [
       { sender: senderId, recipient: recipientId },
       { sender: recipientId, recipient: senderId },
     ],
-  }).populate('sender').populate('recipient');
+  })
+    .populate("sender")
+    .populate("recipient");
 
-  return successResponse('Get private messages success', messages);
+  return successResponse("Get private messages success", messages);
 };
 
 /**
@@ -45,7 +62,7 @@ const getPrivateMessages = async (senderId, recipientId) => {
  */
 const deleteMessage = async (messageId) => {
   const message = await Message.findByIdAndDelete(messageId);
-  return successResponse('Delete message success', message);
+  return successResponse("Delete message success", message);
 };
 
 module.exports = {

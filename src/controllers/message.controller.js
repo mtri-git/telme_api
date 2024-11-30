@@ -19,7 +19,9 @@ const createMessage = async (req, reply) => {
 const getMessagesByRoom = async (req, reply) => {
   try {
     const { roomId } = req.params;
-    const messages = await messageService.getMessagesByRoom(roomId);
+    const data = { roomId, ...req.query };
+    data.userId = req.user.id;
+    const messages = await messageService.getMessagesByRoom(data);
     reply.send(messages);
   } catch (error) {
     reply.code(500).send({ error: error.message });

@@ -1,7 +1,8 @@
-const successResponse = (message, data) => {
+const successResponse = (message, data, others) => {
     return {
         status: true,
         message,
+        ...others,
         data
     }
 }

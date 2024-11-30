@@ -40,13 +40,13 @@ const renewToken = async (data) => {
     const { refreshToken } = data;
     const decoded = verifyToken(refreshToken, TOKEN_TYPE.REFRESH);
 
-    const accessToken = generateToken(decoded.userId, TOKEN_TYPE.ACCESS);
-    const newRefreshToken = generateToken(decoded.userId, TOKEN_TYPE.REFRESH);
+    const accessToken = generateToken(decoded.id, TOKEN_TYPE.ACCESS);
+    const newRefreshToken = generateToken(decoded.id, TOKEN_TYPE.REFRESH);
 
     return successResponse('Renew token success', {
         tokens: {
             accessToken,
-            newRefreshToken,
+            refreshToken: newRefreshToken,
         }
     });
 }

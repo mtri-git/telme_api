@@ -7,6 +7,8 @@ const { successResponse } = require("../utils/response");
  * @returns {Object} - Thông tin phòng được tạo
  */
 const createRoom = async (data) => {
+  data.users = [ ...new Set(data.users) ];
+  data.admins = [ ...new Set(data.admins) ];
   const room = new Room(data);
   await room.save();
   return successResponse("Create room success", room);
@@ -17,7 +19,7 @@ const createRoom = async (data) => {
  * @returns {Array} - Danh sách phòng
  */
 const getAllRooms = async (data) => {
-  const { limit, page } = data;
+  const { limit = 10, page = 1 } = data;
   const rooms = await Room.find()
     .populate("users")
     .populate("created_by")

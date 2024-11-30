@@ -59,9 +59,19 @@ const getUserInfo = async (data) => {
   return successResponse('Get user info success', user);
 }
 
+const getUserById = async (id) => {
+  const user = await Users.findOne({
+    _id: id,
+    deleted_at: null,
+  });
+
+  return user
+}
+
 module.exports = {
     getUsers,
     createUser,
     registerUser,
-    getUserInfo
+    getUserInfo,
+    getUserByEmail: getUserById
 }

@@ -5,6 +5,10 @@ const roomService = require('../services/room.service');
  */
 const createRoom = async (req, reply) => {
   try {
+    const data = req.body;
+    data.created_by = req.user.id;
+    data.admins = [req.user.id];
+    data.users = [req.user.id, ...data.users];
     const room = await roomService.createRoom(req.body);
     reply.code(201).send(room);
   } catch (error) {
@@ -17,7 +21,8 @@ const createRoom = async (req, reply) => {
  */
 const getAllRooms = async (req, reply) => {
   try {
-    const rooms = await roomService.getAllRooms();
+    const data = req.query;
+    const rooms = await roomService.getAllRooms(data);
     reply.send(rooms);
   } catch (error) {
     reply.code(500).send({ error: error.message });

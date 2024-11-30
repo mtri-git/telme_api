@@ -1,7 +1,14 @@
 const { Server } = require("socket.io");
+const chalk = require("chalk");
+const { createMessage } = require("../services/message.service");
+const { getUserByEmail } = require("../services/user.service");
 
 let io;
+// key is userId, value is socket.id
 const userSocketMap = new Map();
+
+// key is socket.id, value is userId
+const socketUserMap = new Map();
 
 // Cấu hình Socket.IO
 const configureSocket = (server) => {
@@ -14,22 +21,28 @@ const configureSocket = (server) => {
 
   // Sự kiện khi một client kết nối
   io.on("connection", (socket) => {
-    console.log(`User connected: ${socket.id}`);
+    console.log(chalk.bgYellow.whiteBright(`User connected: ${socket.id}`));
 
     // Đăng ký userId và ánh xạ với socket.id
-    socket.on("register", ({userId}) => {
+    socket.on("register", async ({userId}) => {
       if (!userId) {
         console.warn(`User tried to register without an ID`);
         return;
       }
 
+      // userId
+      const user = await getUserByEmail(userId);
+
       userSocketMap.set(userId, socket.id);
-      console.log(`User registered: ${userId} -> ${socket.id}`);
+      socketUserMap.set(socket.id, user);
+      console.log(chalk.bgGreen.whiteBright(`User registered: ${userId} -> ${socket.id}`));
       console.table(userSocketMap);
+      console.table(socketUserMap);
     });
 
-    socket.on("test", () => {
+    socket.on("test", (data) => {
       console.log("Test event received");
+      console.log("🚀 ~ socket.on ~ data:", data)
     });
     // Xử lý tin nhắn cá nhân
     socket.on("private_message", ({ recipientId, message }) => {
@@ -42,6 +55,7 @@ const configureSocket = (server) => {
       if (recipientSocketId) {
         io.to(recipientSocketId).emit("receive_private_message", {
           senderId: socket.id,
+          userId: socketUserMap.get(socket.id)?._id || "Unknown",
           message,
         });
         console.log(`Private message sent from ${socket.id} to ${recipientId}`);
@@ -52,13 +66,21 @@ const configureSocket = (server) => {
 
     // Xử lý người dùng tham gia một nhóm
     socket.on("join_room", ({ roomId }) => {
-      if (!roomId) {
-        console.warn(`Invalid roomId`);
-        return;
-      }
+      try {
+        if (!roomId) {
+          console.warn(`Invalid roomId`);
+          return;
+        }
+  
+        socket.join(roomId);
+        // get key by value
+        const userId = socketUserMap.get(socket.id)?._id || "Unknown"
 
-      socket.join(roomId);
-      console.log(`${socket.id} joined room: ${roomId}`);
+        console.log(chalk.bgGreen(`${userId} joined room: ${roomId}`));
+        
+      } catch (error) {
+        console.log("🚀 ~ socket.on ~ error:", error)
+      }
     });
 
     // Xử lý người dùng rời khỏi một nhóm
@@ -72,6 +94,35 @@ const configureSocket = (server) => {
       console.log(`${socket.id} left room: ${roomId}`);
     });
 
+    // Sự kiện typing
+    socket.on("room_typing", ({ roomId }) => {
+      if (!roomId) {
+        console.warn(`Invalid roomId`);
+        return;
+      }
+
+      const userId = socketUserMap.get(socket.id)?._id || "Unknown"
+      io.to(roomId).emit("user_room_typing", {
+        senderId: socket.id,
+        userId: userId,
+      });
+      console.log(`Typing event sent in ${roomId} by ${userId}`);
+    })
+
+    socket.on("stop_room_typing", ({ roomId }) => {
+      if (!roomId) {
+        console.warn(`Invalid roomId`);
+        return;
+      }
+
+      const userId = socketUserMap.get(socket.id)?._id || "Unknown"
+      io.to(roomId).emit("user_stop_room_typing", {
+        senderId: socket.id,
+        userId: userId,
+      });
+      console.log(`Stop typing event sent in ${roomId} by ${userId}`);
+    })
+
     // Xử lý tin nhắn nhóm
     socket.on("room_message", ({ roomId, message }) => {
       if (!roomId || !message) {
@@ -79,12 +130,23 @@ const configureSocket = (server) => {
         return;
       }
 
+      console.log('socketUserMap')
+      console.table(socketUserMap);
+      
+      const userId = socketUserMap.get(socket.id)?._id
+      if (!userId) {
+        console.warn(`User ${socket.id} is not registered`);
+        return;
+      }
+
+      createMessage({ room: roomId, sender: userId, content: message });
+      
       io.to(roomId).emit("receive_room_message", {
         senderId: socket.id,
-        userId: userSocketMap.get(socket.id) || "Unknown",
+        userId: userId,
         message,
       });
-      console.log(`Room message sent in ${roomId} by ${socket.id}`);
+      console.log(`Room message sent in ${roomId} by ${userId}`);
     });
 
     // Xử lý ngắt kết nối

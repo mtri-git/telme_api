@@ -7,7 +7,7 @@ const chalk = require("chalk");
 fastify.register(cors, {
   origin: (origin, callback) => {
     console.log(`Request origin: ${origin}`);
-    const allowedOrigins = [process.env.HOME_URL];
+    const allowedOrigins = [process.env.HOME_URL, "https://telme.vercel.app"];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
