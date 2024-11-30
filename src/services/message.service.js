@@ -19,7 +19,7 @@ const createMessage = async (messageData) => {
  * @returns {Array} - Danh sách tin nhắn trong phòng
  */
 const getMessagesByRoom = async (data) => {
-  const { roomId, limit, page, userId } = data;
+  const { roomId, limit = 10, page = 1, userId } = data;
   console.log("🚀 ~ getMessagesByRoom ~ userId:", userId)
   const total = await Message.countDocuments({ room: roomId });
   const messages = await Message.find({ room: roomId, deleted_at: null })
