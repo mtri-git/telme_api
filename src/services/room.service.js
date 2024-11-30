@@ -1,4 +1,5 @@
 const Room = require("../models/room.model");
+const Users = require('../models/user.model');
 const { successResponse } = require("../utils/response");
 
 /**
@@ -7,9 +8,17 @@ const { successResponse } = require("../utils/response");
  * @returns {Object} - Thông tin phòng được tạo
  */
 const createRoom = async (data) => {
-  data.users = [ ...new Set(data.users) ];
-  data.admins = [ ...new Set(data.admins) ];
-  const room = new Room(data);
+  const { userId } = data;
+  console.log("🚀 ~ createRoom ~ userId:", userId)
+  const users = await Users.find({ email: { $in: data.userEmail } });
+
+  const dataImport = {
+    name: data.name,
+    users: users.map(user => user._id),
+    admins: [ ...new Set(data.admins) ],
+    created_by: userId
+  }
+  const room = new Room(dataImport);
   await room.save();
   return successResponse("Create room success", room);
 };

@@ -9,6 +9,7 @@ const createRoom = async (req, reply) => {
     data.created_by = req.user.id;
     data.admins = [req.user.id];
     data.users = [req.user.id, ...data.users];
+    data.userId = req.user.id;
     const room = await roomService.createRoom(req.body);
     reply.code(201).send(room);
   } catch (error) {
