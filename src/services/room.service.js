@@ -9,8 +9,7 @@ const { successResponse } = require("../utils/response");
  */
 const createRoom = async (data) => {
   const { userId } = data;
-  console.log("🚀 ~ createRoom ~ userId:", userId)
-  const users = await Users.find({ email: { $in: data.userEmail } });
+  const users = await Users.find({ email: { $in: data.userEmails } });
 
   const dataImport = {
     name: data.name,
@@ -34,7 +33,8 @@ const getAllRooms = async (data) => {
     .populate("created_by")
     .populate("admins")
     .skip((page - 1) * limit)
-    .limit(limit);
+    .limit(limit)
+    .sort({ created_at: -1 });
   return successResponse("Get rooms success", rooms);
 };
 
@@ -42,6 +42,7 @@ const getRoomForUser = async (data) => {
   const { userId } = data;
   const rooms = await Room.find({ users: userId })
     .populate("users")
+    .sort({ created_at: -1 });
     // .populate("created_by")
     // .populate("admins");
   return successResponse("Get rooms success", rooms);
