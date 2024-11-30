@@ -38,6 +38,11 @@ const login = async (data) => {
 
 const renewToken = async (data) => {
     const { refreshToken } = data;
+
+    if(!refreshToken) {
+        return errorResponse(400, 'Refresh token is required');
+    }
+
     const decoded = verifyToken(refreshToken, TOKEN_TYPE.REFRESH);
 
     const accessToken = generateToken(decoded.id, TOKEN_TYPE.ACCESS);
