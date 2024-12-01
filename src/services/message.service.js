@@ -16,6 +16,7 @@ const createMessage = async (messageData) => {
   const sender = await User.findOne({ _id: messageData.sender }).select("fullname email avatar").lean();
   console.log("🚀 ~ createMessage ~ sender:", sender)
   messageData.sender = sender;
+  messageData.created_at = new Date();
 
   await Room.findByIdAndUpdate(messageData.room, {
     last_message: messageData,

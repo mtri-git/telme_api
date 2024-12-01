@@ -144,21 +144,25 @@ const configureSocket = (server) => {
       }
 
       try {
-        
         const messageData = {
           room: roomId,
           sender: userId,
           content: message,
           attachment: {},
-        }
+        };
 
-        if(file) {
+        const attachment = {};
+
+        if (file) {
           const fileResponse = await uploadFromBuffer(file);
-          messageData.attachment = {
+          attachment = {
             fileUrl: fileResponse?.url,
             fileType: fileResponse?.resource_type,
             fileFormat: fileResponse?.format,
-          }
+          };
+          messageData.attachment = {
+            ...attachment,
+          };
         }
 
         await createMessage(messageData);
@@ -169,11 +173,7 @@ const configureSocket = (server) => {
           roomId,
           sender,
           message,
-          attachment: {
-            fileUrl: fileResponse?.url,
-            fileType: fileResponse?.resource,
-            fileFormat: fileResponse?.format,
-          }
+          attachment
         });
         console.log(`Room message sent in ${roomId} by ${userId}`);
       } catch (error) {
