@@ -2,6 +2,7 @@ const { Server } = require("socket.io");
 const chalk = require("chalk");
 const { createMessage } = require("../services/message.service");
 const { getUserByEmail } = require("../services/user.service");
+const { cloudinaryUpload, uploadFromBuffer } = require("./cloudinaryUpload");
 
 let io;
 // key is userId, value is socket.id
@@ -24,7 +25,7 @@ const configureSocket = (server) => {
     console.log(chalk.bgYellow.whiteBright(`User connected: ${socket.id}`));
 
     // Đăng ký userId và ánh xạ với socket.id
-    socket.on("register", async ({userId}) => {
+    socket.on("register", async ({ userId }) => {
       if (!userId) {
         console.warn(`User tried to register without an ID`);
         return;
@@ -35,14 +36,16 @@ const configureSocket = (server) => {
 
       userSocketMap.set(userId, socket.id);
       socketUserMap.set(socket.id, user);
-      console.log(chalk.bgGreen.whiteBright(`User registered: ${userId} -> ${socket.id}`));
+      console.log(
+        chalk.bgGreen.whiteBright(`User registered: ${userId} -> ${socket.id}`)
+      );
       console.table(userSocketMap);
       console.table(socketUserMap);
     });
 
     socket.on("test", (data) => {
       console.log("Test event received");
-      console.log("🚀 ~ socket.on ~ data:", data)
+      console.log("🚀 ~ socket.on ~ data:", data);
     });
     // Xử lý tin nhắn cá nhân
     socket.on("private_message", ({ recipientId, message }) => {
@@ -64,26 +67,23 @@ const configureSocket = (server) => {
       }
     });
 
-    // Xử lý người dùng tham gia một nhóm
     socket.on("join_room", ({ roomId }) => {
       try {
         if (!roomId) {
           console.warn(`Invalid roomId`);
           return;
         }
-  
+
         socket.join(roomId);
         // get key by value
-        const userId = socketUserMap.get(socket.id)?._id || "Unknown"
+        const userId = socketUserMap.get(socket.id)?._id || "Unknown";
 
         console.log(chalk.bgGreen(`${userId} joined room: ${roomId}`));
-        
       } catch (error) {
-        console.log("🚀 ~ socket.on ~ error:", error)
+        console.log("🚀 ~ socket.on ~ error:", error);
       }
     });
 
-    // Xử lý người dùng rời khỏi một nhóm
     socket.on("leave_room", ({ roomId }) => {
       if (!roomId) {
         console.warn(`Invalid roomId`);
@@ -101,15 +101,15 @@ const configureSocket = (server) => {
         return;
       }
 
-      const userId = socketUserMap.get(socket.id)?._id || "Unknown"
+      const userId = socketUserMap.get(socket.id)?._id || "Unknown";
       io.to(roomId).emit("user_room_typing", {
         senderId: socket.id,
         roomId,
         userId: userId,
-        sender
+        sender,
       });
       console.log(`Typing event sent in ${roomId} by ${userId}`);
-    })
+    });
 
     socket.on("stop_room_typing", ({ roomId, sender }) => {
       if (!roomId) {
@@ -117,42 +117,75 @@ const configureSocket = (server) => {
         return;
       }
 
-      const userId = socketUserMap.get(socket.id)?._id || "Unknown"
+      const userId = socketUserMap.get(socket.id)?._id || "Unknown";
       io.to(roomId).emit("user_stop_room_typing", {
         senderId: socket.id,
         roomId,
         userId: userId,
-        sender
+        sender,
       });
       console.log(`Stop typing event sent in ${roomId} by ${userId}`);
-    })
+    });
 
     // Xử lý tin nhắn nhóm
-    socket.on("room_message", ({ roomId, message, sender }) => {
+    socket.on("room_message", async ({ roomId, message, sender, file }) => {
       if (!roomId || !message) {
         console.warn(`Invalid room message payload`);
         return;
       }
 
-      console.log('socketUserMap')
+      console.log("socketUserMap");
       console.table(socketUserMap);
-      
-      const userId = socketUserMap.get(socket.id)?._id
+
+      const userId = socketUserMap.get(socket.id)?._id;
       if (!userId) {
         console.warn(`User ${socket.id} is not registered`);
         return;
       }
 
-      createMessage({ room: roomId, sender: userId, content: message });
-      
-      io.to(roomId).emit("receive_room_message", {
-        senderId: socket.id,
-        userId: userId,
-        roomId,
-        sender,
-        message,
-      });
-      console.log(`Room message sent in ${roomId} by ${userId}`);
+      try {
+        const fileResponse = await uploadFromBuffer(file);
+        console.log("🚀 ~ socket.on ~ fileResponse:", fileResponse)
+
+        await createMessage({
+          room: roomId,
+          sender: userId,
+          content: message,
+          attachment: {
+            fileUrl: fileResponse?.url,
+            fileType: fileResponse?.resource_type,
+            fileFormat: fileResponse?.format,
+          },
+        });
+
+        io.to(roomId).emit("receive_room_message", {
+          senderId: socket.id,
+          userId: userId,
+          roomId,
+          sender,
+          message,
+          attachment: {
+            fileUrl: fileResponse?.url,
+            fileType: fileResponse?.resource,
+            fileFormat: fileResponse?.format,
+          }
+        });
+        console.log(`Room message sent in ${roomId} by ${userId}`);
+      } catch (error) {
+        console.log("🚀 ~ socket.on ~ error:", error);
+      }
+    });
+
+    // video call
+    socket.on("signal", (data) => {
+      console.log("Received candidate:", data.signal.candidate);
+      io.to(data.to).emit("signal", { from: socket.id, signal: data.signal });
+    });
+
+    socket.on("join_video_room", (roomId) => {
+      console.log("join_video_room", roomId);
+      socket.join(roomId);
+      socket.to(roomId).emit("user_join_video_call", { userId: socket.id });
     });
 
     // Xử lý ngắt kết nối

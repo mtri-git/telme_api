@@ -57,7 +57,7 @@ const getRoomForUser = async (data) => {
   const { userId } = data;
   const rooms = await Room.find({ users: userId })
     .populate("users")
-    .sort({ updateed_at: -1 });
+    .sort({ updated_at: -1 });
   // .populate("created_by")
   // .populate("admins");
   return successResponse("Get rooms success", rooms);
