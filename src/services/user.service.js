@@ -33,6 +33,12 @@ const getUsers = async (data) => {
 const registerUser = async (data) => {
   const { email, password, username, fullname } = data;
 
+  // auto gen username
+  if (!username) {
+    const username = email.split('@')[0];
+    data.username = username + Math.floor(Math.random() * 1000);
+  }
+
   // crypto password
   const salt = bcrypt.genSaltSync(10);
   const hash = bcrypt.hashSync(password, salt);
