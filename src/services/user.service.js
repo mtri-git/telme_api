@@ -73,5 +73,5 @@ module.exports = {
     createUser,
     registerUser,
     getUserInfo,
-    getUserByEmail: getUserById
+    getUserById
 }

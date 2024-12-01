@@ -1,7 +1,7 @@
 const { Server } = require("socket.io");
 const chalk = require("chalk");
 const { createMessage } = require("../services/message.service");
-const { getUserByEmail } = require("../services/user.service");
+const { getUserById } = require("../services/user.service");
 const { cloudinaryUpload, uploadFromBuffer } = require("./cloudinaryUpload");
 
 let io;
@@ -32,12 +32,12 @@ const configureSocket = (server) => {
       }
 
       // userId
-      const user = await getUserByEmail(userId);
+      const user = await getUserById(userId);
 
       userSocketMap.set(userId, socket.id);
       socketUserMap.set(socket.id, user);
       console.log(
-        chalk.bgGreen.whiteBright(`User registered: ${userId} -> ${socket.id}`)
+        chalk.blue(`User registered: ${userId} -> ${socket.id}`)
       );
       console.table(userSocketMap);
       console.table(socketUserMap);
@@ -129,13 +129,12 @@ const configureSocket = (server) => {
 
     // Xử lý tin nhắn nhóm
     socket.on("room_message", async ({ roomId, message, sender, file }) => {
-      if (!roomId || !message) {
-        console.warn(`Invalid room message payload`);
+      if (!roomId || (!message && !file)) {
+        console.warn(chalk.bgRed(`Invalid room message payload`));
         return;
       }
 
-      console.log("socketUserMap");
-      console.table(socketUserMap);
+      console.log("Received room message:", sender);
 
       const userId = socketUserMap.get(socket.id)?._id;
       if (!userId) {
@@ -147,14 +146,15 @@ const configureSocket = (server) => {
         const messageData = {
           room: roomId,
           sender: userId,
-          content: message,
+          content: message || "",
           attachment: {},
         };
 
-        const attachment = {};
+        let attachment = {};
 
         if (file) {
           const fileResponse = await uploadFromBuffer(file);
+          console.log("🚀 ~ socket.on ~ fileResponse:", fileResponse)
           attachment = {
             fileUrl: fileResponse?.url,
             fileType: fileResponse?.resource_type,
@@ -173,7 +173,7 @@ const configureSocket = (server) => {
           roomId,
           sender,
           message,
-          attachment
+          attachment,
         });
         console.log(`Room message sent in ${roomId} by ${userId}`);
       } catch (error) {
@@ -187,10 +187,12 @@ const configureSocket = (server) => {
       io.to(data.to).emit("signal", { from: socket.id, signal: data.signal });
     });
 
-    socket.on("join_video_room", (roomId) => {
+    socket.on("join_video_room", ({roomId, userInfo}) => {
       console.log("join_video_room", roomId);
       socket.join(roomId);
-      socket.to(roomId).emit("user_join_video_call", { userId: socket.id });
+      socket.roomId = roomId;
+      console.log(`User ${socket.id} joined video room: ${roomId}`);
+      socket.to(roomId).emit("user_join_video_call", { userId: socket.id, userInfo: userInfo });
     });
 
     // Xử lý ngắt kết nối
@@ -204,6 +206,12 @@ const configureSocket = (server) => {
           console.log(`User ${userId} removed from map`);
           break;
         }
+      }
+
+      const roomId = socket.roomId;
+      const userInfo = socketUserMap.get(socket.id);
+      if (roomId) {
+        socket.to(roomId).emit("user_leave_video_call", { userId: socket.id, userInfo });
       }
     });
   });
