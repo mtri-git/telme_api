@@ -19,6 +19,9 @@ const RoomSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    last_message: {
+      type: Object
+    },
     deleted_at: { type: Date, default: null }, // Trường soft delete
   },
   {

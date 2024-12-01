@@ -104,6 +104,7 @@ const configureSocket = (server) => {
       const userId = socketUserMap.get(socket.id)?._id || "Unknown"
       io.to(roomId).emit("user_room_typing", {
         senderId: socket.id,
+        roomId,
         userId: userId,
         sender
       });
@@ -119,6 +120,7 @@ const configureSocket = (server) => {
       const userId = socketUserMap.get(socket.id)?._id || "Unknown"
       io.to(roomId).emit("user_stop_room_typing", {
         senderId: socket.id,
+        roomId,
         userId: userId,
         sender
       });
@@ -146,6 +148,7 @@ const configureSocket = (server) => {
       io.to(roomId).emit("receive_room_message", {
         senderId: socket.id,
         userId: userId,
+        roomId,
         sender,
         message,
       });

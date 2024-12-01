@@ -1,4 +1,6 @@
 const Message = require("../models/message.model");
+const Room = require("../models/room.model");
+const User = require("../models/user.model");
 const { successResponse } = require("../utils/response");
 
 /**
@@ -10,6 +12,15 @@ const createMessage = async (messageData) => {
   console.log("New message:", messageData);
   const message = new Message(messageData);
   await message.save();
+
+  const sender = await User.findOne({ _id: messageData.sender }).select("fullname email avatar").lean();
+  console.log("🚀 ~ createMessage ~ sender:", sender)
+  messageData.sender = sender;
+
+  await Room.findByIdAndUpdate(messageData.room, {
+    last_message: messageData,
+  });
+
   return successResponse("Create message success", message);
 };
 

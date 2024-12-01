@@ -1,5 +1,5 @@
 const Room = require("../models/room.model");
-const Users = require('../models/user.model');
+const Users = require("../models/user.model");
 const { successResponse } = require("../utils/response");
 
 /**
@@ -13,10 +13,10 @@ const createRoom = async (data) => {
 
   const dataImport = {
     name: data.name,
-    users: users.map(user => user._id),
-    admins: [ ...new Set(data.admins) ],
-    created_by: userId
-  }
+    users: users.map((user) => user._id),
+    admins: [...new Set(data.admins)],
+    created_by: userId,
+  };
   const room = new Room(dataImport);
   await room.save();
   return successResponse("Create room success", room);
@@ -27,14 +27,29 @@ const createRoom = async (data) => {
  * @returns {Array} - Danh sách phòng
  */
 const getAllRooms = async (data) => {
-  const { limit = 10, page = 1 } = data;
-  const rooms = await Room.find()
+  const { limit = 20, page = 1, userId, name } = data;
+  const query = {
+    deleted_at: null,
+  };
+
+  if (name) {
+    query.name = { $regex: new RegExp(name, "i") };
+  }
+  const rooms = await Room.find(query)
     .populate("users")
     .populate("created_by")
     .populate("admins")
     .skip((page - 1) * limit)
     .limit(limit)
-    .sort({ created_at: -1 });
+    .sort({ created_at: -1 })
+    .lean();
+
+  for (const room of rooms) {
+    room.is_admin = room.admins.includes(userId);
+    room.is_member = room.users.some((user) => user._id.toString() === userId);
+    room.is_creator = room.created_by._id.toString() === userId;
+  }
+
   return successResponse("Get rooms success", rooms);
 };
 
@@ -42,11 +57,11 @@ const getRoomForUser = async (data) => {
   const { userId } = data;
   const rooms = await Room.find({ users: userId })
     .populate("users")
-    .sort({ created_at: -1 });
-    // .populate("created_by")
-    // .populate("admins");
+    .sort({ updateed_at: -1 });
+  // .populate("created_by")
+  // .populate("admins");
   return successResponse("Get rooms success", rooms);
-}
+};
 
 /**
  * Lấy thông tin phòng theo ID
@@ -78,7 +93,7 @@ const addUserToRoom = async (roomId, userId) => {
     .populate("admins")
     .populate("created_by");
 
-    return successResponse("Add user to room success", response);
+  return successResponse("Add user to room success", response);
 };
 
 /**
@@ -96,6 +111,48 @@ const deleteRoom = async (roomId) => {
   return successResponse("Delete room success", room);
 };
 
+/**
+ * Xóa phòng
+ * @param {String} data
+ * @returns {Object} - Thông tin phòng bị xóa mềm
+ */
+const joinRoom = async (data) => {
+  const { roomId, userId } = data;
+
+  const room = await Room.findByIdAndUpdate(
+    roomId,
+    { $addToSet: { users: userId } },
+    { new: true }
+  )
+    .populate("users")
+    .populate("admins")
+    .populate("created_by");
+
+  return successResponse("Delete room success", room);
+};
+
+/**
+ * Xóa phòng
+ * @param {String} data
+ * @returns {Object} - Thông tin phòng bị xóa mềm
+ */
+const leaveRoom = async (data) => {
+  const { roomId, userId } = data;
+
+  const room = await Room.findByIdAndUpdate(
+    roomId,
+    { $pull: { users: userId } },
+    { new: true }
+  )
+    .populate("users")
+    .populate("admins")
+    .populate("created_by");
+
+  return successResponse("Delete room success", room);
+};
+
+
+
 module.exports = {
   createRoom,
   getAllRooms,
@@ -103,4 +160,6 @@ module.exports = {
   getRoomById,
   addUserToRoom,
   deleteRoom,
+  joinRoom,
+  leaveRoom
 };

@@ -22,6 +22,7 @@ const createRoom = async (req, reply) => {
 const getAllRooms = async (req, reply) => {
   try {
     const data = req.query;
+    data.userId = req.user.id;
     const rooms = await roomService.getAllRooms(data);
     reply.send(rooms);
   } catch (error) {
@@ -76,6 +77,48 @@ const addUserToRoom = async (req, reply) => {
 };
 
 /**
+ * Tham gia phòng
+ */
+const joinRoom = async (req, reply) => {
+  try {
+    const data = {
+      roomId: req.params.roomId,
+      userId: req.user.id,
+    };
+
+    const room = await roomService.joinRoom(data);
+    if (!room) {
+      reply.code(404).send({ message: 'Room not found' });
+      return;
+    }
+    reply.send(room);
+  } catch (error) {
+    reply.code(500).send({ error: error.message });
+  }
+};
+
+/**
+ * Rời phòng
+ */
+const leaveRoom = async (req, reply) => {
+  try {
+    const data = {
+      roomId: req.params.roomId,
+      userId: req.user.id,
+    };
+
+    const room = await roomService.leaveRoom(data);
+    if (!room) {
+      reply.code(404).send({ message: 'Room not found' });
+      return;
+    }
+    reply.send(room);
+  } catch (error) {
+    reply.code(500).send({ error: error.message });
+  }
+};
+
+/**
  * Xóa phòng (soft delete)
  */
 const deleteRoom = async (req, reply) => {
@@ -98,4 +141,6 @@ module.exports = {
   getRoomById,
   addUserToRoom,
   deleteRoom,
+  joinRoom,
+  leaveRoom
 };
