@@ -144,19 +144,24 @@ const configureSocket = (server) => {
       }
 
       try {
-        const fileResponse = await uploadFromBuffer(file);
-        console.log("🚀 ~ socket.on ~ fileResponse:", fileResponse)
-
-        await createMessage({
+        
+        const messageData = {
           room: roomId,
           sender: userId,
           content: message,
-          attachment: {
+          attachment: {},
+        }
+
+        if(file) {
+          const fileResponse = await uploadFromBuffer(file);
+          messageData.attachment = {
             fileUrl: fileResponse?.url,
             fileType: fileResponse?.resource_type,
             fileFormat: fileResponse?.format,
-          },
-        });
+          }
+        }
+
+        await createMessage(messageData);
 
         io.to(roomId).emit("receive_room_message", {
           senderId: socket.id,
