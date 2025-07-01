@@ -52,8 +52,8 @@ const configureSocket = (server) => {
       console.log(
         chalk.blue(`User registered: ${userId} -> ${socket.id}`)
       );
-      console.table(userSocketMap);
-      console.table(socketUserMap);
+      // console.table(userSocketMap);
+      // console.table(socketUserMap);
     });
 
     socket.on("test", (data) => {
