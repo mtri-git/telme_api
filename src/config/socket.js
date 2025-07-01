@@ -2,7 +2,7 @@ const { Server } = require("socket.io");
 const chalk = require("chalk");
 const { createMessage } = require("../services/message.service");
 const { getUserById } = require("../services/user.service");
-const { cloudinaryUpload, uploadFromBuffer } = require("./cloudinaryUpload");
+const { uploadFromBuffer } = require("./cloudinaryUpload");
 
 let io;
 // key is userId, value is socket.id
@@ -19,6 +19,19 @@ const configureSocket = (server) => {
       methods: ["GET", "POST"],
     },
   });
+  // authen
+  // io.use((socket, next) => {
+  //   const token = socket.handshake.auth.token;
+  //   if (!token) {
+  //     return next(new Error("Authentication error"));
+  //   }
+  //   // decode token
+  //   const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+  //   if (!decoded) {
+  //     return next(new Error("Authentication error"));
+  //   }
+  //   next();
+  // });
 
   // Sự kiện khi một client kết nối
   io.on("connection", (socket) => {
